@@ -47,7 +47,7 @@ async function handleConfirm() {
 function handleRedeem(voucher) {
   showConfirm({
     title: '确认核销',
-    message: `确定要核销「${voucher.title}」吗？核销后将不可恢复使用。`,
+    message: `确定要核销「${voucher.title}」吗？核销后如需恢复可使用撤销功能。`,
     confirmText: '确认核销',
     cancelText: '取消',
     onConfirm: async () => {

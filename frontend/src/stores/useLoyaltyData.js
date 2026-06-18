@@ -73,12 +73,24 @@ export function useLoyaltyData() {
     },
     async redeemVoucher(payload) {
       const result = await run(() => loyaltyApi.redeemVoucher(payload), '礼券核销成功')
-      await refreshAll()
+      const idx = state.vouchers.findIndex(v => v.id === payload.voucher_id)
+      if (idx !== -1 && result.voucher) {
+        state.vouchers.splice(idx, 1, { ...state.vouchers[idx], ...result.voucher })
+      }
+      if (state.dashboard && state.dashboard.active_vouchers > 0) {
+        state.dashboard.active_vouchers -= 1
+      }
       return result
     },
     async revertVoucher(payload) {
       const result = await run(() => loyaltyApi.revertVoucher(payload), '礼券已撤销')
-      await refreshAll()
+      const idx = state.vouchers.findIndex(v => v.id === payload.voucher_id)
+      if (idx !== -1 && result.voucher) {
+        state.vouchers.splice(idx, 1, { ...state.vouchers[idx], ...result.voucher })
+      }
+      if (state.dashboard) {
+        state.dashboard.active_vouchers += 1
+      }
       return result
     },
     async expireVouchers() {
