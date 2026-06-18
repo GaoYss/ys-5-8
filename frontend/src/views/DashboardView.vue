@@ -5,7 +5,7 @@ import MetricCard from '../components/MetricCard.vue'
 import StatusBanner from '../components/StatusBanner.vue'
 import { useLoyaltyData } from '../stores/useLoyaltyData'
 
-const { state, refreshAll, earnPoints } = useLoyaltyData()
+const { state, refreshAll, earnPoints, clearError, clearNotice } = useLoyaltyData()
 const form = reactive({ member_id: '', amount: 38, rule_id: '' })
 
 const recentTransactions = computed(() => state.transactions.slice(0, 6))
@@ -32,7 +32,13 @@ async function submitEarn() {
         <p class="eyebrow">Loyalty Desk</p>
         <h2>积分工作台</h2>
       </div>
-      <StatusBanner :error="state.error" :notice="state.notice" :loading="state.loading" />
+      <StatusBanner
+        :error="state.error"
+        :notice="state.notice"
+        :loading="state.loading"
+        @close-error="clearError"
+        @close-notice="clearNotice"
+      />
     </div>
 
     <div class="metrics-grid">

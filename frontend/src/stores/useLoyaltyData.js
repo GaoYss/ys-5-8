@@ -16,10 +16,11 @@ const state = reactive({
 
 async function run(action, successMessage = '') {
   state.loading = true
-  state.error = ''
+  state.notice = ''
   try {
     const result = await action()
     state.notice = successMessage
+    state.error = ''
     return result
   } catch (error) {
     state.error = error.message
@@ -27,6 +28,14 @@ async function run(action, successMessage = '') {
   } finally {
     state.loading = false
   }
+}
+
+function clearError() {
+  state.error = ''
+}
+
+function clearNotice() {
+  state.notice = ''
 }
 
 async function refreshAll() {
@@ -54,6 +63,8 @@ export function useLoyaltyData() {
   return {
     state,
     refreshAll,
+    clearError,
+    clearNotice,
     async createMember(payload) {
       await run(() => loyaltyApi.createMember(payload), '会员已创建')
       await refreshAll()
@@ -91,11 +102,6 @@ export function useLoyaltyData() {
       if (state.dashboard) {
         state.dashboard.active_vouchers += 1
       }
-      return result
-    },
-    async expireVouchers() {
-      const result = await run(() => loyaltyApi.expireVouchers(), '过期礼券标记完成')
-      await refreshAll()
       return result
     }
   }

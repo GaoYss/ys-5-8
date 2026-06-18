@@ -3,7 +3,7 @@ import { onMounted, reactive } from 'vue'
 import StatusBanner from '../components/StatusBanner.vue'
 import { useLoyaltyData } from '../stores/useLoyaltyData'
 
-const { state, refreshAll, createMember } = useLoyaltyData()
+const { state, refreshAll, createMember, clearError, clearNotice } = useLoyaltyData()
 const form = reactive({ name: '', phone: '', birthday: '2000-01-01' })
 
 onMounted(refreshAll)
@@ -21,7 +21,13 @@ async function submitMember() {
         <p class="eyebrow">Members</p>
         <h2>会员管理</h2>
       </div>
-      <StatusBanner :error="state.error" :notice="state.notice" :loading="state.loading" />
+      <StatusBanner
+        :error="state.error"
+        :notice="state.notice"
+        :loading="state.loading"
+        @close-error="clearError"
+        @close-notice="clearNotice"
+      />
     </div>
 
     <div class="two-column">

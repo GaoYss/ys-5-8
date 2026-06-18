@@ -4,7 +4,7 @@ import MemberSelect from '../components/MemberSelect.vue'
 import StatusBanner from '../components/StatusBanner.vue'
 import { useLoyaltyData } from '../stores/useLoyaltyData'
 
-const { state, refreshAll, redeemGift } = useLoyaltyData()
+const { state, refreshAll, redeemGift, clearError, clearNotice } = useLoyaltyData()
 const form = reactive({ member_id: '', gift_id: '' })
 
 onMounted(async () => {
@@ -25,7 +25,13 @@ async function submitRedeem() {
         <p class="eyebrow">Rewards</p>
         <h2>礼品兑换</h2>
       </div>
-      <StatusBanner :error="state.error" :notice="state.notice" :loading="state.loading" />
+      <StatusBanner
+        :error="state.error"
+        :notice="state.notice"
+        :loading="state.loading"
+        @close-error="clearError"
+        @close-notice="clearNotice"
+      />
     </div>
 
     <form class="toolbar-panel" @submit.prevent="submitRedeem">

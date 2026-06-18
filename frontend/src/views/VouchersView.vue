@@ -1,10 +1,11 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 import StatusBanner from '../components/StatusBanner.vue'
 import { useLoyaltyData } from '../stores/useLoyaltyData'
 
-const { state, refreshAll, issueBirthdayVouchers, redeemVoucher, revertVoucher } = useLoyaltyData()
+const { state, refreshAll, issueBirthdayVouchers, redeemVoucher, revertVoucher, clearError, clearNotice } = useLoyaltyData()
 const issuedCount = ref(null)
+const pendingVoucherId = ref(null)
 
 const confirmDialog = ref({
   visible: false,
@@ -51,7 +52,12 @@ function handleRedeem(voucher) {
     confirmText: '确认核销',
     cancelText: '取消',
     onConfirm: async () => {
-      await redeemVoucher({ voucher_id: voucher.id })
+      pendingVoucherId.value = voucher.id
+      try {
+        await redeemVoucher({ voucher_id: voucher.id })
+      } finally {
+        pendingVoucherId.value = null
+      }
     }
   })
 }
@@ -63,7 +69,12 @@ function handleRevert(voucher) {
     confirmText: '确认撤销',
     cancelText: '取消',
     onConfirm: async () => {
-      await revertVoucher({ voucher_id: voucher.id })
+      pendingVoucherId.value = voucher.id
+      try {
+        await revertVoucher({ voucher_id: voucher.id })
+      } finally {
+        pendingVoucherId.value = null
+      }
     }
   })
 }
@@ -94,11 +105,17 @@ function getActionButton(voucher) {
         <p class="eyebrow">Birthday</p>
         <h2>生日礼券发放</h2>
       </div>
-      <StatusBanner :error="state.error" :notice="state.notice" :loading="state.loading" />
+      <StatusBanner
+        :error="state.error"
+        :notice="state.notice"
+        :loading="state.loading"
+        @close-error="clearError"
+        @close-notice="clearNotice"
+      />
     </div>
 
     <div class="toolbar-panel">
-      <button class="primary-button" type="button" @click="submitIssue">发放今日生日礼券</button>
+      <button class="primary-button" type="button" :disabled="state.loading" @click="submitIssue">发放今日生日礼券</button>
       <span v-if="issuedCount !== null">本次发放 {{ issuedCount }} 张</span>
     </div>
 
@@ -128,9 +145,11 @@ function getActionButton(voucher) {
               v-if="getActionButton(voucher)"
               :class="['action-btn', getActionButton(voucher).class]"
               type="button"
+              :disabled="pendingVoucherId === voucher.id"
               @click="getActionButton(voucher).type === 'redeem' ? handleRedeem(voucher) : handleRevert(voucher)"
             >
-              {{ getActionButton(voucher).label }}
+              <span v-if="pendingVoucherId === voucher.id">处理中</span>
+              <span v-else>{{ getActionButton(voucher).label }}</span>
             </button>
             <span v-else style="color: #74695f; font-size: 13px;">—</span>
           </span>
@@ -143,11 +162,22 @@ function getActionButton(voucher) {
         <h4>{{ confirmDialog.title }}</h4>
         <p>{{ confirmDialog.message }}</p>
         <div class="confirm-actions">
-          <button class="secondary-btn" type="button" @click="closeConfirm">
+          <button
+            class="secondary-btn"
+            type="button"
+            :disabled="pendingVoucherId !== null"
+            @click="closeConfirm"
+          >
             {{ confirmDialog.cancelText }}
           </button>
-          <button class="primary-button" type="button" @click="handleConfirm">
-            {{ confirmDialog.confirmText }}
+          <button
+            class="primary-button"
+            type="button"
+            :disabled="pendingVoucherId !== null"
+            @click="handleConfirm"
+          >
+            <span v-if="pendingVoucherId !== null">处理中</span>
+            <span v-else>{{ confirmDialog.confirmText }}</span>
           </button>
         </div>
       </div>
@@ -168,16 +198,26 @@ function getActionButton(voucher) {
   color: #fff;
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   background: #a94f2c;
+}
+
+.action-btn:disabled {
+  background: #a9a29c;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .action-btn.secondary {
   background: #6c6258;
 }
 
-.action-btn.secondary:hover {
+.action-btn.secondary:hover:not(:disabled) {
   background: #5a5149;
+}
+
+.action-btn.secondary:disabled {
+  background: #a9a29c;
 }
 
 .confirm-overlay {

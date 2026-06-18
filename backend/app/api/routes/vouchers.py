@@ -25,9 +25,3 @@ def redeem_voucher(request: RedeemVoucherRequest) -> dict:
 @router.post("/revert")
 def revert_voucher(request: RedeemVoucherRequest) -> dict:
     return service.revert_voucher(request.voucher_id)
-
-
-@router.post("/expire")
-def expire_vouchers() -> dict:
-    count = service.mark_expired_vouchers()
-    return {"expired_count": count, "message": f"已标记 {count} 张过期礼券"}

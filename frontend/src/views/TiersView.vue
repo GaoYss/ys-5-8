@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import StatusBanner from '../components/StatusBanner.vue'
 import { useLoyaltyData } from '../stores/useLoyaltyData'
 
-const { state, refreshAll } = useLoyaltyData()
+const { state, refreshAll, clearError, clearNotice } = useLoyaltyData()
 
 onMounted(refreshAll)
 </script>
@@ -15,7 +15,13 @@ onMounted(refreshAll)
         <p class="eyebrow">Tier Benefits</p>
         <h2>等级权益</h2>
       </div>
-      <StatusBanner :error="state.error" :notice="state.notice" :loading="state.loading" />
+      <StatusBanner
+        :error="state.error"
+        :notice="state.notice"
+        :loading="state.loading"
+        @close-error="clearError"
+        @close-notice="clearNotice"
+      />
     </div>
 
     <div class="tier-timeline">
