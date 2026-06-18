@@ -80,6 +80,14 @@ class Voucher(BaseModel):
     expires_at: str
 
 
+class RedeemVoucherRequest(BaseModel):
+    voucher_id: int
+
+
+class RedeemVoucherRequest(BaseModel):
+    voucher_id: int
+
+
 class OperationResult(BaseModel):
     member: Member
     transaction: Transaction | None = None

@@ -167,3 +167,35 @@ class LoyaltyRepository:
                 """
             ).fetchall()
             return rows_to_dicts(rows)
+
+    def get_voucher(self, voucher_id: int) -> dict | None:
+        with get_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT v.*, m.name AS member_name
+                FROM vouchers v
+                JOIN members m ON m.id = v.member_id
+                WHERE v.id = ?
+                """,
+                (voucher_id,),
+            ).fetchone()
+            return row_to_dict(row)
+
+    def update_voucher_status(self, voucher_id: int, status: str) -> None:
+        with get_connection() as conn:
+            conn.execute(
+                "UPDATE vouchers SET status = ? WHERE id = ?",
+                (status, voucher_id),
+            )
+
+    def mark_expired_vouchers(self, today: str) -> int:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE vouchers
+                SET status = 'expired'
+                WHERE status = 'unused' AND expires_at < ?
+                """,
+                (today,),
+            )
+            return cursor.rowcount

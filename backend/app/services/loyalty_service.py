@@ -118,12 +118,40 @@ class LoyaltyService:
         return issued
 
     def list_vouchers(self) -> list[dict]:
+        self.mark_expired_vouchers()
         return self.repo.list_vouchers()
+
+    def get_voucher(self, voucher_id: int) -> dict:
+        voucher = self.repo.get_voucher(voucher_id)
+        if voucher is None:
+            raise HTTPException(status_code=404, detail="礼券不存在")
+        return voucher
+
+    def redeem_voucher(self, voucher_id: int) -> dict:
+        self.mark_expired_vouchers()
+        voucher = self.get_voucher(voucher_id)
+
+        if voucher["status"] == "used":
+            raise HTTPException(status_code=400, detail="礼券已核销，不可重复使用")
+        if voucher["status"] == "expired":
+            raise HTTPException(status_code=400, detail="礼券已过期，无法核销")
+
+        self.repo.update_voucher_status(voucher_id, "used")
+        updated = self.repo.get_voucher(voucher_id)
+        if updated is None:
+            raise HTTPException(status_code=500, detail="核销失败")
+        return {"voucher": updated, "message": f"已核销「{voucher['title']}」"}
+
+    def mark_expired_vouchers(self, today: date | None = None) -> int:
+        today = today or date.today()
+        count = self.repo.mark_expired_vouchers(today.isoformat())
+        return count
 
     def list_transactions(self, member_id: int | None = None) -> list[dict]:
         return self.repo.list_transactions(member_id)
 
     def dashboard(self) -> dict:
+        self.mark_expired_vouchers()
         members = self.repo.list_members()
         gifts = self.repo.list_gifts()
         vouchers = self.repo.list_vouchers()

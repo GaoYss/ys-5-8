@@ -70,6 +70,16 @@ export function useLoyaltyData() {
       const vouchers = await run(() => loyaltyApi.issueBirthdayVouchers(), '生日礼券发放完成')
       await refreshAll()
       return vouchers
+    },
+    async redeemVoucher(payload) {
+      const result = await run(() => loyaltyApi.redeemVoucher(payload), '礼券核销成功')
+      await refreshAll()
+      return result
+    },
+    async expireVouchers() {
+      const result = await run(() => loyaltyApi.expireVouchers(), '过期礼券标记完成')
+      await refreshAll()
+      return result
     }
   }
 }
