@@ -142,6 +142,24 @@ class LoyaltyService:
             raise HTTPException(status_code=500, detail="核销失败")
         return {"voucher": updated, "message": f"已核销「{voucher['title']}」"}
 
+    def revert_voucher(self, voucher_id: int) -> dict:
+        voucher = self.get_voucher(voucher_id)
+
+        if voucher["status"] != "used":
+            raise HTTPException(status_code=400, detail="只有已核销的礼券才能撤销")
+
+        self.repo.update_voucher_status(voucher_id, "unused")
+        updated = self.repo.get_voucher(voucher_id)
+        if updated is None:
+            raise HTTPException(status_code=500, detail="撤销失败")
+        self.mark_expired_vouchers()
+        final = self.repo.get_voucher(voucher_id)
+        if final is None:
+            raise HTTPException(status_code=500, detail="撤销失败")
+        if final["status"] == "expired":
+            return {"voucher": final, "message": f"已撤销「{voucher['title']}」，但该礼券已过期"}
+        return {"voucher": final, "message": f"已撤销「{voucher['title']}」，礼券恢复为未使用状态"}
+
     def mark_expired_vouchers(self, today: date | None = None) -> int:
         today = today or date.today()
         count = self.repo.mark_expired_vouchers(today.isoformat())

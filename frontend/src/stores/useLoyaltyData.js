@@ -76,6 +76,11 @@ export function useLoyaltyData() {
       await refreshAll()
       return result
     },
+    async revertVoucher(payload) {
+      const result = await run(() => loyaltyApi.revertVoucher(payload), '礼券已撤销')
+      await refreshAll()
+      return result
+    },
     async expireVouchers() {
       const result = await run(() => loyaltyApi.expireVouchers(), '过期礼券标记完成')
       await refreshAll()
